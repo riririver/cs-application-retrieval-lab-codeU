@@ -1,13 +1,16 @@
 package com.flatironschool.javacs;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import redis.clients.jedis.Jedis;
 
@@ -60,8 +63,29 @@ public class WikiSearch {
 	 * @return New WikiSearch object.
 	 */
 	public WikiSearch or(WikiSearch that) {
-        // FILL THIS IN!
-		return null;
+		
+		Map<String, Integer> unionMap = new HashMap<String, Integer>();
+		
+	
+		unionMap.putAll(this.map);
+		
+		Set<String> thatKeys = that.map.keySet();
+		
+		Iterator<String> ii =thatKeys.iterator();
+		
+		while(ii.hasNext())
+		{
+			String thatKey = ii.next();
+			Integer thatRelevance = that.map.get(thatKey);
+			Integer thisRelevance = unionMap.get(thatKey);
+			 
+			if (thisRelevance != null)
+				thatRelevance = thatRelevance + thisRelevance;
+			
+			unionMap.put(thatKey, thatRelevance);
+		}
+		
+		return new WikiSearch (unionMap);
 	}
 	
 	/**
@@ -71,8 +95,29 @@ public class WikiSearch {
 	 * @return New WikiSearch object.
 	 */
 	public WikiSearch and(WikiSearch that) {
-        // FILL THIS IN!
-		return null;
+		Map<String, Integer> andMap = new HashMap<String, Integer>();
+		
+			
+		Set<String> thisKeys = this.map.keySet();
+		
+		Iterator<String> ii =thisKeys.iterator();
+		
+		while(ii.hasNext())
+		{
+			String thisKey = ii.next();
+			Integer thatRelevance = that.map.get(thisKey);
+						 
+			if (thatRelevance != null)
+			{
+				Integer thisRelevance = this.map.get(thisKey);
+				thisRelevance = thatRelevance + thisRelevance;
+				andMap.put(thisKey, thisRelevance);
+			}
+			
+			
+		}
+		
+		return new WikiSearch (andMap);
 	}
 	
 	/**
@@ -82,8 +127,28 @@ public class WikiSearch {
 	 * @return New WikiSearch object.
 	 */
 	public WikiSearch minus(WikiSearch that) {
-        // FILL THIS IN!
-		return null;
+		Map<String, Integer> minusMap = new HashMap<String, Integer>();
+		
+		
+		Set<String> thisKeys = this.map.keySet();
+		
+		Iterator<String> ii =thisKeys.iterator();
+		
+		while(ii.hasNext())
+		{
+			String thisKey = ii.next();
+			Integer thatRelevance = that.map.get(thisKey);
+						 
+			if (thatRelevance == null)
+			{
+				Integer thisRelevance = this.map.get(thisKey);
+				minusMap.put(thisKey, thisRelevance);
+			}
+			
+			
+		}
+		
+		return new WikiSearch (minusMap);
 	}
 	
 	/**
@@ -104,8 +169,18 @@ public class WikiSearch {
 	 * @return List of entries with URL and relevance.
 	 */
 	public List<Entry<String, Integer>> sort() {
-        // FILL THIS IN!
-		return null;
+		
+		List<Entry<String, Integer>> listOfRel = new ArrayList<>();
+		listOfRel.addAll(this.map.entrySet());
+		 Collections.sort(listOfRel, new Comparator<Entry<String, Integer>>() {
+    			@Override
+				public int compare(Entry<String, Integer> arg0, Entry<String, Integer> arg1) {
+					
+					return ((Integer)arg0.getValue()).compareTo((Integer)arg1.getValue());
+				}
+		 });
+		 
+		 return listOfRel;
 	}
 
 	/**
